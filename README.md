@@ -12,7 +12,6 @@ platform: python
 platformVersion: "3.14"
 run:
   port: 8080
-  startCommand: uvicorn backend.app:app --host 0.0.0.0 --port 8080
 ```
 
 Connect this repo in the [Embr Portal](https://portal.embrdev.io), and Embr will install dependencies from `requirements.txt`, then start the server automatically.
