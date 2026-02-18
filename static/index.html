@@ -5,33 +5,116 @@
 <meta name="viewport" content="width=device-width, initial-scale=1" />
 <title>Smart Notes</title>
 <link rel="icon" href="/favicon.svg" type="image/svg+xml">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
 <style>
-body { font-family: serif; margin: 20px; }
-.app { max-width: 700px; }
-header { margin-bottom: 20px; }
-.ai-badge { font-size: .75rem; }
-.ai-badge.enabled { color: green; }
-.ai-badge.disabled { color: gray; }
-.note-form { border: 1px solid #ccc; padding: 10px; margin-bottom: 20px; }
-.note-form input, .note-form textarea { width: 100%; margin-bottom: 8px; font-family: serif; }
-.note-form textarea { height: 80px; }
-.btn { cursor: pointer; margin-right: 4px; }
-.note-card { border: 1px solid #ccc; padding: 10px; margin-bottom: 10px; }
-.note-card .content { white-space: pre-wrap; margin: 8px 0; }
-.note-card .meta { font-size: .8rem; color: gray; }
-.note-card .actions { margin-top: 8px; }
-.ai-result { margin-top: 8px; border: 1px solid #ccc; padding: 8px; }
-.ai-result pre { white-space: pre-wrap; font-family: serif; }
-.edit-form input, .edit-form textarea { width: 100%; margin-bottom: 6px; font-family: serif; }
-.edit-form textarea { height: 60px; }
-.spinner { display: inline-block; }
-.spinner::after { content: "Loading..."; }
+*,*::before,*::after { box-sizing: border-box; margin: 0; padding: 0; }
+:root {
+  --font: 'Inter', system-ui, -apple-system, sans-serif;
+  --bg: #faf8f5;
+  --surface: #ffffff;
+  --text: #2d2a26;
+  --text-secondary: #8a8580;
+  --accent: #e07850;
+  --accent-hover: #c9643e;
+  --teal: #3a9e8f;
+  --teal-hover: #2e8273;
+  --border: #e8e4df;
+  --shadow: 0 1px 3px rgba(0,0,0,.06), 0 4px 12px rgba(0,0,0,.04);
+  --shadow-lg: 0 4px 16px rgba(0,0,0,.08), 0 12px 32px rgba(0,0,0,.06);
+  --radius: 16px;
+  --radius-sm: 10px;
+}
+body { font-family: var(--font); background: var(--bg); color: var(--text); line-height: 1.6; min-height: 100vh; }
+.app { max-width: 960px; margin: 0 auto; padding: 40px 24px 80px; }
+
+/* Header */
+header { text-align: center; margin-bottom: 40px; }
+header h1 { font-size: 2.2rem; font-weight: 700; letter-spacing: -.02em; }
+header h1 .icon { font-style: normal; margin-right: 6px; }
+header p { color: var(--text-secondary); font-size: .95rem; margin-top: 6px; }
+.ai-badge { display: inline-block; font-size: .7rem; font-weight: 600; padding: 3px 10px;
+  border-radius: 999px; margin-left: 8px; vertical-align: middle; text-transform: uppercase; letter-spacing: .05em; }
+.ai-badge.enabled { background: var(--teal); color: #fff; }
+.ai-badge.disabled { background: var(--border); color: var(--text-secondary); }
+
+/* Form */
+.note-form { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius);
+  padding: 28px; margin-bottom: 40px; box-shadow: var(--shadow); }
+.note-form input, .note-form textarea { width: 100%; background: var(--bg); border: 1.5px solid var(--border);
+  border-radius: var(--radius-sm); color: var(--text); font-family: var(--font); font-size: .95rem;
+  padding: 12px 16px; outline: none; transition: border-color .2s, box-shadow .2s; margin-bottom: 12px; resize: vertical; }
+.note-form input:focus, .note-form textarea:focus { border-color: var(--accent); box-shadow: 0 0 0 3px rgba(224,120,80,.15); }
+.note-form textarea { min-height: 90px; }
+.form-actions { display: flex; justify-content: flex-end; }
+
+/* Buttons */
+.btn { display: inline-flex; align-items: center; gap: 5px; padding: 9px 18px; border: none; border-radius: var(--radius-sm);
+  font-family: var(--font); font-size: .85rem; font-weight: 600; cursor: pointer; transition: all .2s; }
+.btn:active { transform: scale(.97); }
+.btn-primary { background: var(--accent); color: #fff; }
+.btn-primary:hover { background: var(--accent-hover); box-shadow: 0 2px 8px rgba(224,120,80,.3); }
+.btn-sm { padding: 6px 12px; font-size: .78rem; border-radius: 8px; }
+.btn-ghost { background: transparent; color: var(--text-secondary); }
+.btn-ghost:hover { background: var(--bg); color: var(--text); }
+.btn-teal { background: rgba(58,158,143,.1); color: var(--teal); }
+.btn-teal:hover { background: var(--teal); color: #fff; }
+.btn-danger { background: transparent; color: #d44; }
+.btn-danger:hover { background: #fef2f2; }
+
+/* Note grid */
+.note-list { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 20px; }
+.empty-state { grid-column: 1 / -1; text-align: center; padding: 60px 20px; color: var(--text-secondary); }
+.empty-state .empty-icon { font-size: 2.5rem; margin-bottom: 12px; }
+
+/* Note card */
+.note-card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius);
+  padding: 24px; box-shadow: var(--shadow); display: flex; flex-direction: column;
+  transition: box-shadow .25s, transform .25s; }
+.note-card:hover { box-shadow: var(--shadow-lg); transform: translateY(-2px); }
+.note-card-header { display: flex; justify-content: space-between; align-items: flex-start; gap: 8px; }
+.note-card-header h3 { font-size: 1.05rem; font-weight: 600; line-height: 1.35; flex: 1; }
+.header-btns { display: flex; gap: 4px; flex-shrink: 0; }
+.meta { font-size: .78rem; color: var(--text-secondary); margin-top: 4px; }
+.content { white-space: pre-wrap; margin: 14px 0; font-size: .9rem; color: #4a4540; line-height: 1.65; flex: 1; }
+.actions { display: flex; flex-wrap: wrap; gap: 6px; margin-top: auto; padding-top: 14px;
+  border-top: 1px solid var(--border); }
+
+/* AI results */
+.ai-result { margin-top: 14px; background: linear-gradient(135deg, #f0faf8, #faf8f5); border: 1px solid #d4ece7;
+  border-radius: var(--radius-sm); padding: 16px; }
+.ai-result h4 { font-size: .8rem; font-weight: 600; color: var(--teal); text-transform: capitalize;
+  margin-bottom: 8px; letter-spacing: .02em; }
+.ai-result pre { white-space: pre-wrap; font-family: var(--font); font-size: .88rem; color: var(--text); line-height: 1.6; }
+
+/* Edit form */
+.edit-form { display: flex; flex-direction: column; gap: 10px; }
+.edit-form input, .edit-form textarea { width: 100%; background: var(--bg); border: 1.5px solid var(--border);
+  border-radius: var(--radius-sm); color: var(--text); font-family: var(--font); font-size: .92rem;
+  padding: 10px 14px; outline: none; transition: border-color .2s; }
+.edit-form input:focus, .edit-form textarea:focus { border-color: var(--accent); }
+.edit-form textarea { min-height: 70px; resize: vertical; }
+.edit-actions { display: flex; gap: 8px; justify-content: flex-end; }
+
+/* Spinner */
+.spinner { display: flex; align-items: center; gap: 8px; padding: 12px 0; color: var(--text-secondary); font-size: .85rem; }
+.spinner::before { content: ''; width: 18px; height: 18px; border: 2.5px solid var(--border);
+  border-top-color: var(--teal); border-radius: 50%; animation: spin .7s linear infinite; }
+@keyframes spin { to { transform: rotate(360deg); } }
+
+/* Responsive */
+@media (max-width: 600px) {
+  .app { padding: 24px 16px 60px; }
+  header h1 { font-size: 1.6rem; }
+  .note-list { grid-template-columns: 1fr; }
+  .note-form { padding: 20px; }
+}
 </style>
 </head>
 <body>
 <div class="app">
   <header>
-    <h1>Smart Notes <span id="ai-badge" class="ai-badge disabled">AI Mock</span></h1>
+    <h1><em class="icon">📝</em>Smart Notes <span id="ai-badge" class="ai-badge disabled">AI Mock</span></h1>
     <p>Create notes and use AI to summarize, extract tasks, or analyze sentiment</p>
   </header>
 
@@ -39,7 +122,7 @@ header { margin-bottom: 20px; }
     <input id="note-title" placeholder="Note title…" />
     <textarea id="note-content" placeholder="Write your note here…"></textarea>
     <div class="form-actions">
-      <button class="btn" type="submit">Add Note</button>
+      <button class="btn btn-primary" type="submit">✚ Add Note</button>
     </div>
   </form>
 
@@ -65,12 +148,12 @@ async function loadNotes() {
     const res = await fetch(`${API}/notes`);
     const notes = await res.json();
     if (notes.length === 0) {
-      noteList.innerHTML = '<p>No notes yet. Create one above!</p>';
+      noteList.innerHTML = '<div class="empty-state"><div class="empty-icon">📋</div><p>No notes yet. Create one above!</p></div>';
       return;
     }
     noteList.innerHTML = notes.map(n => noteCard(n)).join('');
   } catch (e) {
-    noteList.innerHTML = '<div class="empty-state"><p>Failed to load notes.</p></div>';
+    noteList.innerHTML = '<div class="empty-state"><div class="empty-icon">⚠️</div><p>Failed to load notes.</p></div>';
   }
 }
 
@@ -80,16 +163,16 @@ function noteCard(n) {
     <div class="note-card-header">
       <h3>${esc(n.title)}</h3>
       <div class="header-btns">
-        <button class="btn" onclick="startEdit('${n.id}')">Edit</button>
-        <button class="btn" onclick="delNote('${n.id}')">Delete</button>
+        <button class="btn btn-ghost btn-sm" onclick="startEdit('${n.id}')">✎ Edit</button>
+        <button class="btn btn-danger btn-sm" onclick="delNote('${n.id}')">✕</button>
       </div>
     </div>
     <div class="meta">${date}</div>
     <div class="content">${esc(n.content)}</div>
     <div class="actions">
-      <button class="btn" onclick="aiAction('${n.id}','summarize',this)">Summarize</button>
-      <button class="btn" onclick="aiAction('${n.id}','action_items',this)">Action Items</button>
-      <button class="btn" onclick="aiAction('${n.id}','sentiment',this)">Sentiment</button>
+      <button class="btn btn-teal btn-sm" onclick="aiAction('${n.id}','summarize',this)">Summarize</button>
+      <button class="btn btn-teal btn-sm" onclick="aiAction('${n.id}','action_items',this)">Action Items</button>
+      <button class="btn btn-teal btn-sm" onclick="aiAction('${n.id}','sentiment',this)">Sentiment</button>
     </div>
     <div id="ai-${n.id}"></div>
   </div>`;
@@ -126,8 +209,8 @@ async function startEdit(id) {
     <input id="edit-title-${id}" value="${esc(n.title)}" />
     <textarea id="edit-content-${id}">${esc(n.content)}</textarea>
     <div class="edit-actions">
-      <button class="btn" onclick="saveEdit('${id}')">Save</button>
-      <button class="btn" onclick="loadNotes()">Cancel</button>
+      <button class="btn btn-primary btn-sm" onclick="saveEdit('${id}')">Save</button>
+      <button class="btn btn-ghost btn-sm" onclick="loadNotes()">Cancel</button>
     </div>
   </div>`;
 }
@@ -146,7 +229,7 @@ async function saveEdit(id) {
 // AI action
 async function aiAction(id, action, btn) {
   const container = document.getElementById(`ai-${id}`);
-  container.innerHTML = '<span class="spinner"></span>';
+  container.innerHTML = '<div class="spinner">Analyzing…</div>';
   const btns = btn.parentElement.querySelectorAll('button');
   btns.forEach(b => b.disabled = true);
   try {
